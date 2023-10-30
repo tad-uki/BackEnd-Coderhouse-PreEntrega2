@@ -1,24 +1,47 @@
 import { Router } from "express";
-import { ProductManager } from "../components/ProductManager.js";
-import { _dirname } from "../utils.js";
-import path from "path"
+import { ProductManager } from "../persistence/classes/ProductManager.js";
 
 const router = Router()
 
-const productsService = new ProductManager(path.join(_dirname, "/files/products.json"))
+const productsService = new ProductManager()
 
-const products = await productsService.getProducts()
+
 
 router.get("/", async(req, res)=>{
     try {
-        const limitQuery = req.query.limit
-        if(limitQuery){
-            const limitProducts = await products.filter((p)=> p.id <= limitQuery)
-            res.send(limitProducts)
+        const {limit = 10, page = 1, sort, category} = req.query
+        console.log(req.query)
+
+        const query = {}
+
+        const options = {
+            limit,
+            page,
+            sort,
+            lean: true
         }
-        else{
-            res.send(products)
+
+        if(sort){
+            options.sort = sort === "asc" ? {price: 1} : sort === "desc" ? {price: -1} : null
         }
+
+        if(category){
+            query.category = category
+        }
+
+        const products = await productsService.getPaginatedProducts(query, options)
+
+        const result = {
+            status: "success",
+            payload: products.docs,
+            totalPages: products.totalPages,
+            page: products.page,
+            prevPage: products.prevPage,
+            nextPage: products.nextPage,
+            hasPrevPage: products.hasPrevPage,
+            hasNextPage: products.hasNextPage,
+        }
+        res.json(result)
     } catch (error) {
         res.send(error)
     }
@@ -26,13 +49,16 @@ router.get("/", async(req, res)=>{
 
 router.get("/:pid", async (req, res)=>{
     try {
-        const idParam = parseInt(req.params.pid)
+        
+        const idParam = req.params.pid
+        console.log(idParam)
         const paramProduct = await productsService.getProductById(idParam)
+        
         if(paramProduct){
             res.send(paramProduct)
         }
         else{
-            res.send(new Error("Product doesn't exist."))
+            res.send(idParam)
         }
     } catch (error) {
         res.send(error)
@@ -42,16 +68,16 @@ router.get("/:pid", async (req, res)=>{
 router.post("/", async (req, res)=>{
     try {
         const newProduct = req.body
-        let result = await productsService.addProduct(newProduct)
-        res.send(result)
+        let result = await productsService.createProduct(newProduct)
+        res.json({operationStatus:"success", message:result})
     } catch (error) {
-        res.send(error)
+        res.json({operationStatus:"error", message:error.message})
     }
 })
 
 router.put("/:pid", async (req, res)=>{
     try {
-        const idParam = parseInt(req.params.pid)
+        const idParam = req.params.pid
         const updProduct = req.body
         let result = await productsService.updateProduct(idParam, updProduct)
         res.send(result)
@@ -62,7 +88,7 @@ router.put("/:pid", async (req, res)=>{
 
 router.delete("/:pid", async (req, res)=>{
     try {
-        const idParam = parseInt(req.params.pid)
+        const idParam = req.params.pid
         let result = await productsService.deleteProduct(idParam)
         res.send(result)
     } catch (error) {
