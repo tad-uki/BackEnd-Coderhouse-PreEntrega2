@@ -1,11 +1,10 @@
 const socketClient = io()
 
-const productsDisplay = document.getElementById("productsDisplay")
+const productButtons = document.getElementsByClassName("productBtn")
 
-socketClient.on("productList", (productData)=>{
-    let productTags = []
-    productData.forEach(product => {
-        productTags += `<p> Nombre: ${product.title} </p>`
-    });
-    productsDisplay.innerHTML = productTags
-})
+for(let i = 0; i < productButtons.length; i++){
+    let productBtn = productButtons[i]
+    productBtn.addEventListener("click", ()=>{
+        socketClient.emit("addProductToCart", productBtn.value)
+    })
+}

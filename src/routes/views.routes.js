@@ -8,8 +8,8 @@ const productsService = new ProductManager()
 const cartsService =  new CartManager()
 
 router.get("/", async(req, res)=>{
-    const {limit = 10, page = 1, sort, category} = req.query
-        console.log(req.query)
+    try {
+        const {limit = 10, page = 1, sort, category, price} = req.query
 
         const query = {}
 
@@ -19,17 +19,16 @@ router.get("/", async(req, res)=>{
             sort,
             lean: true
         }
-
-        if(sort){
-            options.sort = sort === "asc" ? {price: 1} : sort === "desc" ? {price: -1} : null
-        }
-
-        if(category){
-            query.category = category
-        }
+        
+        if(sort) options.sort = sort === "asc" ? {price: 1} : sort === "desc" ? {price: -1} : null
+        if(category) query.category = category
+        if(price) query.price = price
 
         const productList = await productsService.getPaginatedProducts(query, options)
-    res.render("home", {products: productList.docs})
+        res.render("home", {products: productList.docs})
+    } catch (error) {
+        res.send(error)
+    }
     
 })
 

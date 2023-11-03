@@ -1,13 +1,17 @@
 <h1>Listado de productos</h1>
 
+
 {{#each products}}
 
-<p>{{this.title}}</p>
-<p>Price: {{this.price}}</p>
-<button>Add to Cart</button>
-
-<hr>
-
+<form class="productForm"></form>
+    <p>{{this.title}}</p>
+    <p>Price: {{this.price}}</p>
+    <button value={{this.id}} class="productBtn">Add to Cart</button>
+    <hr>
+</form>
+<br/>
 
 {{/each}}
 
+<script src="socket.io/socket.io.js"></script>
+<script src="js/home.js"></script>

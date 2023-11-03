@@ -5,12 +5,9 @@ const router = Router()
 
 const productsService = new ProductManager()
 
-
-
 router.get("/", async(req, res)=>{
     try {
-        const {limit = 10, page = 1, sort, category} = req.query
-        console.log(req.query)
+        const {limit = 10, page = 1, sort, category, price} = req.query
 
         const query = {}
 
@@ -21,13 +18,9 @@ router.get("/", async(req, res)=>{
             lean: true
         }
 
-        if(sort){
-            options.sort = sort === "asc" ? {price: 1} : sort === "desc" ? {price: -1} : null
-        }
-
-        if(category){
-            query.category = category
-        }
+        if(sort) options.sort = sort === "asc" ? {price: 1} : sort === "desc" ? {price: -1} : null
+        if(category) query.category = category
+        if(price) query.price = price
 
         const products = await productsService.getPaginatedProducts(query, options)
 
@@ -51,7 +44,6 @@ router.get("/:pid", async (req, res)=>{
     try {
         
         const idParam = req.params.pid
-        console.log(idParam)
         const paramProduct = await productsService.getProductById(idParam)
         
         if(paramProduct){
